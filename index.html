@@ -4,8 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Organization Text Editor</title>
-    <!-- Include Marked.js for clean Markdown formatting -->
+    
+    <!-- Marked.js for Markdown -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <!-- KaTeX for Math Rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
     <style>
         body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: #f9f9f9; }
         .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
@@ -15,7 +22,7 @@
         .user-msg { background: #007bff; color: white; margin-left: auto; white-space: pre-wrap; }
         .ai-msg { background: #e9ecef; color: black; margin-right: auto; }
         
-        /* Markdown styling inside AI messages */
+        /* Markdown & Math styling */
         .ai-msg p { margin: 0 0 10px 0; }
         .ai-msg p:last-child { margin-bottom: 0; }
         .ai-msg code { background: #dee2e6; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
@@ -62,7 +69,7 @@
         const passwordInput = document.getElementById('password-input');
         const loginError = document.getElementById('login-error');
 
-        let messages = [{"role": "system", "content": "You are a helpful assistant."}];
+        let messages = [{"role": "system", "content": "You are a helpful assistant that formats all mathematical expressions using standard LaTeX delimiters like \\( ... \\) for inline math and $$ ... $$ for block math."}];
 
         const savedPassword = localStorage.getItem('site_pass');
         if (savedPassword) {
@@ -125,9 +132,21 @@
             div.className = `message ${role === 'user' ? 'user-msg' : 'ai-msg'}`;
             
             if (role === 'user') {
-                div.innerText = content; // Keep user text clean and raw
+                div.innerText = content;
             } else {
-                div.innerHTML = marked.parse(content); // Render AI markdown into clean HTML
+                // Convert Markdown to HTML first
+                div.innerHTML = marked.parse(content);
+                
+                // Automatically render LaTeX math equations inside the message
+                renderMathInElement(div, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false},
+                        {left: '\\(', right: '\\)', display: false},
+                        {left: '\\[', right: '\\]', display: true}
+                    ],
+                    throwOnError: false
+                });
             }
             
             chatHistory.appendChild(div);
