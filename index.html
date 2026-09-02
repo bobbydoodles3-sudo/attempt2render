@@ -5,10 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Organization Text Editor</title>
     
-    <!-- Marked.js for Markdown -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     
-    <!-- KaTeX for Math Rendering -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
@@ -39,7 +37,6 @@
 </head>
 <body>
 
-    <!-- Login Screen -->
     <div id="login-screen" class="card">
         <h2>Enter Password</h2>
         <p>This site is private.</p>
@@ -50,7 +47,6 @@
         <div id="login-error" class="error-text"></div>
     </div>
 
-    <!-- Chat Screen -->
     <div id="chat-screen" class="card">
         <h2>Text Editor</h2>
         <div id="chat-history"></div>
@@ -69,7 +65,7 @@
         const passwordInput = document.getElementById('password-input');
         const loginError = document.getElementById('login-error');
 
-        let messages = [{"role": "system", "content": "You are a helpful assistant that formats all mathematical expressions using standard LaTeX delimiters like \\( ... \\) for inline math and $$ ... $$ for block math."}];
+        let messages = [{"role": "system", "content": "You are a helpful assistant. You must wrap all mathematical expressions, functions like \\cos, \\sin, variables, and equations using single dollar signs for inline math (e.g., $\\cos(x)$) or double dollar signs for block math (e.g., $$\\int x dx$$). Never write math commands outside of dollar signs."}];
 
         const savedPassword = localStorage.getItem('site_pass');
         if (savedPassword) {
@@ -134,10 +130,10 @@
             if (role === 'user') {
                 div.innerText = content;
             } else {
-                // Convert Markdown to HTML first
+                // Convert Markdown to HTML
                 div.innerHTML = marked.parse(content);
                 
-                // Automatically render LaTeX math equations inside the message
+                // Scan and render KaTeX math expressions
                 renderMathInElement(div, {
                     delimiters: [
                         {left: '$$', right: '$$', display: true},
