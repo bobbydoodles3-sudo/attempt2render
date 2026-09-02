@@ -64,7 +64,8 @@
         const passwordInput = document.getElementById('password-input');
         const loginError = document.getElementById('login-error');
 
-        let messages = [{"role": "system", "content": "You are a helpful text editor assistant. Format all math using standard LaTeX inside single or double dollar signs."}];
+        // Restored strict system prompt for math commands like \cos, vectors, variables
+        let messages = [{"role": "system", "content": "You are a helpful text editor assistant. You must wrap all mathematical expressions, functions like \\cos, \\sin, vectors, variables, and equations using single dollar signs for inline math (e.g., $\\cos(x)$) or double dollar signs for block math. Never write math commands outside of dollar signs."}];
 
         const savedPassword = localStorage.getItem('site_pass');
         if (savedPassword) {
@@ -122,7 +123,6 @@
             location.reload();
         }
 
-        // Clean up common AI text translation quirks like `=;` or malformed math tags
         function cleanMathText(text) {
             return text
                 .replace(/=;/g, '=')
