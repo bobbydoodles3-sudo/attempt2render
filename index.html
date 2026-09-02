@@ -20,7 +20,6 @@
         .user-msg { background: #007bff; color: white; margin-left: auto; white-space: pre-wrap; }
         .ai-msg { background: #e9ecef; color: black; margin-right: auto; }
         
-        /* Markdown & Math styling */
         .ai-msg p { margin: 0 0 10px 0; }
         .ai-msg p:last-child { margin-bottom: 0; }
         .ai-msg code { background: #dee2e6; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
@@ -65,7 +64,7 @@
         const passwordInput = document.getElementById('password-input');
         const loginError = document.getElementById('login-error');
 
-        let messages = [{"role": "system", "content": "You are a helpful assistant. You must wrap all mathematical expressions, functions like \\cos, \\sin, variables, and equations using single dollar signs for inline math (e.g., $\\cos(x)$) or double dollar signs for block math (e.g., $$\\int x dx$$). Never write math commands outside of dollar signs."}];
+        let messages = [{"role": "system", "content": "You are a helpful text editor assistant. Format all math using standard LaTeX inside single or double dollar signs."}];
 
         const savedPassword = localStorage.getItem('site_pass');
         if (savedPassword) {
@@ -123,6 +122,14 @@
             location.reload();
         }
 
+        // Clean up common AI text translation quirks like `=;` or malformed math tags
+        function cleanMathText(text) {
+            return text
+                .replace(/=;/g, '=')
+                .replace(/=;=/g, '=')
+                .replace(/\\math/g, '\\mathrm');
+        }
+
         function appendMessage(role, content) {
             const div = document.createElement('div');
             div.className = `message ${role === 'user' ? 'user-msg' : 'ai-msg'}`;
@@ -130,10 +137,9 @@
             if (role === 'user') {
                 div.innerText = content;
             } else {
-                // Convert Markdown to HTML
-                div.innerHTML = marked.parse(content);
+                const cleanedContent = cleanMathText(content);
+                div.innerHTML = marked.parse(cleanedContent);
                 
-                // Scan and render KaTeX math expressions
                 renderMathInElement(div, {
                     delimiters: [
                         {left: '$$', right: '$$', display: true},
