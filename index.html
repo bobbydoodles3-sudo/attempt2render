@@ -129,21 +129,13 @@ function logout() {
 }
 
 function cleanMathText(text) {
-    let cleaned = text
-        .replace(/=;\s*/g, '= ')
-        .replace(/;\s*=/g, '=')
-        .replace(/;\s*([a-zA-Z0-9\)])/g, '$1')
-        .replace(/=\s*;\s*/g, '=');
-        
-    const lines = cleaned.split('\n');
-    const processedLines = lines.map(line => {
-        if ((line.includes('\\cos') || line.includes('\\sin') || line.includes('\\frac') || line.includes('\\theta'))) {
-            return '$$' + line + '$$';
-        }
-        return line;
-    });
-    
-    return processedLines.join('\n');
+    // Convert LaTeX delimiters to dollar signs BEFORE Markdown parsing
+    // This prevents marked.js from stripping the backslashes
+    return text
+        .replace(/\\\[/g, '$$$$') // Replaces \[ with $$
+        .replace(/\\\]/g, '$$$$') // Replaces \] with $$
+        .replace(/\\\(/g, '$')    // Replaces \( with $
+        .replace(/\\\)/g, '$');   // Replaces \) with $
 }
 
 function appendMessage(role, content) {
