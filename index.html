@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Private AI</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        #chat-history { height: 70vh; overflow-y: auto; border: 1px solid #ccc; padding: 15px; margin-bottom: 10px; border-radius: 8px;}
+        .message { margin-bottom: 10px; padding: 10px; border-radius: 5px; }
+        .user-msg { background: #007bff; color: white; margin-left: auto; width: fit-content; max-width: 80%;}
+        .ai-msg { background: #f1f1f1; width: fit-content; max-width: 80%;}
+        .input-area { display: flex; gap: 10px; }
+        input { flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px;}
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;}
+    </style>
+</head>
+<body>
+    <h2>My Private AI</h2>
+    <div id="chat-history"></div>
+    <div class="input-area">
+        <input type="text" id="user-input" placeholder="Ask something..." onkeypress="if(event.key === 'Enter') sendMessage()">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        let messages = [{"role": "system", "content": "You are a helpful assistant."}];
+        const chatHistory = document.getElementById('chat-history');
+        const userInput = document.getElementById('user-input');
+
+        function appendMessage(role, content) {
+            const div = document.createElement('div');
+            div.className = `message ${role === 'user' ? 'user-msg' : 'ai-msg'}`;
+            div.innerText = content;
+            chatHistory.appendChild(div);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const text = userInput.value.trim();
+            if (!text) return;
+
+            appendMessage('user', text);
+            messages.push({"role": "user", "content": text});
+            userInput.value = '';
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: 'llama3-8b-8192',
+                        messages: messages
+                    })
+                });
+                
+                const data = await response.json();
+                const aiReply = data.choices[0].message.content;
+                
+                appendMessage('assistant', aiReply);
+                messages.push({"role": "assistant", "content": aiReply});
+            } catch (error) {
+                appendMessage('assistant', 'Error connecting to server.');
+            }
+        }
+    </script>
+</body>
+</html>
