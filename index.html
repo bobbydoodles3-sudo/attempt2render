@@ -18,7 +18,17 @@
         .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         #chat-screen { display: none; flex-direction: column; height: 85vh; }
         #chat-history { flex-grow: 1; overflow-y: auto; border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 6px; background: #fff;}
-        .message { margin-bottom: 15px; padding: 12px 16px; border-radius: 6px; line-height: 1.5; max-width: 85%; }
+        
+        /* Fixed text running off page & word wrapping */
+        .message { 
+            margin-bottom: 15px; 
+            padding: 12px 16px; 
+            border-radius: 6px; 
+            line-height: 1.5; 
+            max-width: 85%; 
+            word-break: break-word; 
+            overflow-wrap: break-word; 
+        }
         .user-msg { background: #007bff; color: white; margin-left: auto; white-space: pre-wrap; }
         .ai-msg { background: #e9ecef; color: black; margin-right: auto; }
         
@@ -126,9 +136,13 @@
             location.reload();
         }
 
-        // Auto-clean typos and wrap unformatted equation lines so KaTeX catches them
+        // Hard-clean semicolons and malformed formatting artifacts injected by LLM responses
         function cleanMathText(text) {
-            let cleaned = text.replace(/=;/g, '=').replace(/=;=/g, '=');
+            let cleaned = text
+                .replace(/=;\s*/g, '= ')
+                .replace(/;\s*=/g, ' =')
+                .replace(/;\s*([a-zA-Z0-9\)])/g, ' $1') // strips semicolons accidentally stuck before letters/variables
+                .replace(/=\s*;\s*/g, '= ');
 
             const lines = cleaned.split('\n');
             const processedLines = lines.map(line => {
