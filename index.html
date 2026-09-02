@@ -128,16 +128,26 @@ function logout() {
     location.reload();
 }
 
-function cleanMathText(text) {
-    // Convert LaTeX delimiters to dollar signs BEFORE Markdown parsing
-    // This prevents marked.js from stripping the backslashes
-    return text
-        .replace(/\\\[/g, '$$$$') // Replaces \[ with $$
-        .replace(/\\\]/g, '$$$$') // Replaces \] with $$
-        .replace(/\\\(/g, '$')    // Replaces \( with $
-        .replace(/\\\)/g, '$');   // Replaces \) with $
-}
+function parseMessageContent(content) {
+    let mathBlocks = [];
+    
+    // 1. Extract all math blocks to hide them from Marked.js
+    let textWithPlaceholders = content.replace(/(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\)|\$[\s\S]*?\$)/g, (match) => {
+        mathBlocks.push(match);
+        return `%%%MATH_BLOCK_${mathBlocks.length - 1}%%%`;
+    });
 
+    // 2. Parse the remaining text as Markdown
+    let html = marked.parse(textWithPlaceholders);
+
+    // 3. Inject the untouched math blocks back into the HTML
+    mathBlocks.forEach((math, i) => {
+        html = html.replace(`%%%MATH_BLOCK_${i}%%%`, math);
+    });
+
+    return html;
+}
+    
 function appendMessage(role, content) {
     const div = document.createElement('div');
     div.className = `message ${role === 'user' ? 'user-msg' : 'ai-msg'}`;
@@ -145,8 +155,8 @@ function appendMessage(role, content) {
     if (role === 'user') {
         div.innerText = content;
     } else {
-        const cleanedContent = cleanMathText(content);
-        div.innerHTML = marked.parse(cleanedContent);
+        // Use the new isolation function instead of cleanMathText
+        div.innerHTML = parseMessageContent(content);
         
         renderMathInElement(div, {
             delimiters: [
