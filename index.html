@@ -16,6 +16,7 @@ body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;
 #chat-screen { display: none; flex-direction: column; height: 85vh; }
 #chat-history { flex-grow: 1; overflow-y: auto; border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; }
 
+
 /* Fixed text running off page & word wrapping */
 .message {
     margin-bottom: 15px;
@@ -60,6 +61,7 @@ button:hover { background: #0056b3; }
     <div class="input-area">
         <input type="text" id="user-input" placeholder="Ask something..." onkeypress="if(event.key === 'Enter') sendMessage()">
         <button onclick="sendMessage()">Send</button>
+        <button onclick="exportChat()" style="background: #28a745;">Save Chat</button>
         <button onclick="logout()" style="background: #dc3545;">Lock</button>
     </div>
 </div>
@@ -171,6 +173,21 @@ function appendMessage(role, content) {
     
     chatHistory.appendChild(div);
     chatHistory.scrollTop = chatHistory.scrollHeight;
+}
+
+function exportChat() {
+    const chatData = JSON.stringify(messages, null, 2);
+    const blob = new Blob([chatData], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `chat-backup-${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 }
 
 async function sendMessage() {
