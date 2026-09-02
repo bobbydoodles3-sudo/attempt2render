@@ -3,7 +3,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Serve your website files from the "public" folder
-app.use(express.static('public'));
+app.use(express.static(__dirname));
 app.use(express.json());
 
 // The secure proxy endpoint
