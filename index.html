@@ -1,205 +1,211 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Organization Text Editor</title>
-    
-    <!-- Marked.js for Markdown -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    
-    <!-- KaTeX for Math Rendering -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Organization Text Editor</title>
+<!-- Marked.js for Markdown -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<!-- KaTeX for Math Rendering -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+<style>
+body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: #f9f9f9; }
+.card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+#chat-screen { display: none; flex-direction: column; height: 85vh; }
+#chat-history { flex-grow: 1; overflow-y: auto; border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; }
 
-    <style>
-        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: #f9f9f9; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        #chat-screen { display: none; flex-direction: column; height: 85vh; }
-        #chat-history { flex-grow: 1; overflow-y: auto; border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 6px; background: #fff;}
-        .message { margin-bottom: 15px; padding: 12px 16px; border-radius: 6px; line-height: 1.5; max-width: 85%; }
-        .user-msg { background: #007bff; color: white; margin-left: auto; white-space: pre-wrap; }
-        .ai-msg { background: #e9ecef; color: black; margin-right: auto; }
-        
-        .ai-msg p { margin: 0 0 10px 0; }
-        .ai-msg p:last-child { margin-bottom: 0; }
-        .ai-msg code { background: #dee2e6; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
-        .ai-msg pre { background: #212529; color: #f8f9fa; padding: 10px; border-radius: 6px; overflow-x: auto; }
-        .ai-msg pre code { background: transparent; color: inherit; padding: 0; }
-        
-        .input-area { display: flex; gap: 10px; }
-        input[type="text"], input[type="password"] { flex-grow: 1; padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px;}
-        button { padding: 12px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;}
-        button:hover { background: #0056b3; }
-        .error-text { color: red; font-size: 14px; margin-top: 5px; }
-        .hidden { display: none !important; }
-    </style>
+/* Fixed text running off page & word wrapping */
+.message {
+    margin-bottom: 15px;
+    padding: 12px 16px;
+    border-radius: 6px;
+    line-height: 1.5;
+    max-width: 85%;
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+.user-msg { background: #007bff; color: white; margin-left: auto; white-space: pre-wrap; }
+.ai-msg { background: #e9ecef; color: black; margin-right: auto; }
+.ai-msg p { margin: 0 0 10px 0; }
+.ai-msg p:last-child { margin-bottom: 0; }
+.ai-msg code { background: #dee2e6; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
+.ai-msg pre { background: #212529; color: #f8f9fa; padding: 10px; border-radius: 6px; overflow-x: auto; }
+.ai-msg pre code { background: transparent; color: inherit; padding: 0; }
+.input-area { display: flex; gap: 10px; }
+input[type="text"], input[type="password"] { flex-grow: 1; padding: 12px; border: 1px solid #ccc; border-radius: 4px; }
+button { padding: 12px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+button:hover { background: #0056b3; }
+.error-text { color: red; font-size: 14px; margin-top: 5px; }
+.hidden { display: none !important; }
+</style>
 </head>
 <body>
-
-    <!-- Login Screen -->
-    <div id="login-screen" class="card">
-        <h2>Enter Password</h2>
-        <p>This site is private.</p>
-        <div class="input-area">
-            <input type="password" id="password-input" placeholder="Password..." onkeypress="if(event.key === 'Enter') checkPassword()">
-            <button onclick="checkPassword()">Enter</button>
-        </div>
-        <div id="login-error" class="error-text"></div>
+<!-- Login Screen -->
+<div id="login-screen" class="card">
+    <h2>Enter Password</h2>
+    <p>This site is private.</p>
+    <div class="input-area">
+        <input type="password" id="password-input" placeholder="Password..." onkeypress="if(event.key === 'Enter') checkPassword()">
+        <button onclick="checkPassword()">Enter</button>
     </div>
+    <div id="login-error" class="error-text"></div>
+</div>
 
-    <!-- Chat Screen -->
-    <div id="chat-screen" class="card">
-        <h2>Text Editor</h2>
-        <div id="chat-history"></div>
-        <div class="input-area">
-            <input type="text" id="user-input" placeholder="Ask something..." onkeypress="if(event.key === 'Enter') sendMessage()">
-            <button onclick="sendMessage()">Send</button>
-            <button onclick="logout()" style="background: #dc3545;">Lock</button>
-        </div>
+<!-- Chat Screen -->
+<div id="chat-screen" class="card">
+    <h2>Text Editor</h2>
+    <div id="chat-history"></div>
+    <div class="input-area">
+        <input type="text" id="user-input" placeholder="Ask something..." onkeypress="if(event.key === 'Enter') sendMessage()">
+        <button onclick="sendMessage()">Send</button>
+        <button onclick="logout()" style="background: #dc3545;">Lock</button>
     </div>
+</div>
 
-    <script>
-        const loginScreen = document.getElementById('login-screen');
-        const chatScreen = document.getElementById('chat-screen');
-        const chatHistory = document.getElementById('chat-history');
-        const userInput = document.getElementById('user-input');
-        const passwordInput = document.getElementById('password-input');
-        const loginError = document.getElementById('login-error');
+<script>
+const loginScreen = document.getElementById('login-screen');
+const chatScreen = document.getElementById('chat-screen');
+const chatHistory = document.getElementById('chat-history');
+const userInput = document.getElementById('user-input');
+const passwordInput = document.getElementById('password-input');
+const loginError = document.getElementById('login-error');
 
-        let messages = [{"role": "system", "content": "You are a helpful text editor assistant. Wrap all math functions like \\cos, \\sin, vectors, variables, and equations using single dollar signs (e.g. $\\cos(x)$) or double dollar signs."}];
+let messages = [{"role": "system", "content": "You are a helpful text editor assistant. Wrap all math functions in dollar signs."}];
 
-        const savedPassword = localStorage.getItem('site_pass');
-        if (savedPassword) {
-            verifyStoredPassword(savedPassword);
+const savedPassword = localStorage.getItem('site_pass');
+if (savedPassword) {
+    verifyStoredPassword(savedPassword);
+}
+
+async function checkPassword() {
+    const pwd = passwordInput.value.trim();
+    if (!pwd) return;
+    try {
+        const res = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: pwd })
+        });
+        const data = await res.json();
+        if (data.success) {
+            localStorage.setItem('site_pass', pwd);
+            showChat();
+        } else {
+            loginError.innerText = "Incorrect password.";
         }
+    } catch (err) {
+        loginError.innerText = "Connection error.";
+    }
+}
 
-        async function checkPassword() {
-            const pwd = passwordInput.value.trim();
-            if (!pwd) return;
-
-            try {
-                const res = await fetch('/api/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password: pwd })
-                });
-                const data = await res.json();
-
-                if (data.success) {
-                    localStorage.setItem('site_pass', pwd);
-                    showChat();
-                } else {
-                    loginError.innerText = "Incorrect password.";
-                }
-            } catch (err) {
-                loginError.innerText = "Connection error.";
-            }
-        }
-
-        async function verifyStoredPassword(pwd) {
-            try {
-                const res = await fetch('/api/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password: pwd })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    showChat();
-                } else {
-                    localStorage.removeItem('site_pass');
-                }
-            } catch (err) {
-                localStorage.removeItem('site_pass');
-            }
-        }
-
-        function showChat() {
-            loginScreen.classList.add('hidden');
-            chatScreen.style.display = 'flex';
-        }
-
-        function logout() {
+async function verifyStoredPassword(pwd) {
+    try {
+        const res = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: pwd })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showChat();
+        } else {
             localStorage.removeItem('site_pass');
-            location.reload();
         }
+    } catch (err) {
+        localStorage.removeItem('site_pass');
+    }
+}
 
-        // Auto-clean typos and wrap unformatted equation lines so KaTeX catches them
-        function cleanMathText(text) {
-            let cleaned = text.replace(/=;/g, '=').replace(/=;=/g, '=');
+function showChat() {
+    loginScreen.classList.add('hidden');
+    chatScreen.style.display = 'flex';
+}
 
-            const lines = cleaned.split('\n');
-            const processedLines = lines.map(line => {
-                if ((line.includes('\\cos') || line.includes('\\sin') || line.includes('\\frac') || line.includes('\\theta') || line.includes('\\cdot') || line.includes('proj')) && !line.includes('$')) {
-                    return '$$' + line + '$$';
-                }
-                return line;
-            });
+function logout() {
+    localStorage.removeItem('site_pass');
+    location.reload();
+}
 
-            return processedLines.join('\n');
+function cleanMathText(text) {
+    let cleaned = text
+        .replace(/=;\s*/g, '= ')
+        .replace(/;\s*=/g, '=')
+        .replace(/;\s*([a-zA-Z0-9\)])/g, '$1')
+        .replace(/=\s*;\s*/g, '=');
+        
+    const lines = cleaned.split('\n');
+    const processedLines = lines.map(line => {
+        if ((line.includes('\\cos') || line.includes('\\sin') || line.includes('\\frac') || line.includes('\\theta'))) {
+            return '$$' + line + '$$';
         }
+        return line;
+    });
+    
+    return processedLines.join('\n');
+}
 
-        function appendMessage(role, content) {
-            const div = document.createElement('div');
-            div.className = `message ${role === 'user' ? 'user-msg' : 'ai-msg'}`;
-            
-            if (role === 'user') {
-                div.innerText = content;
-            } else {
-                const cleanedContent = cleanMathText(content);
-                div.innerHTML = marked.parse(cleanedContent);
-                
-                renderMathInElement(div, {
-                    delimiters: [
-                        {left: '$$', right: '$$', display: true},
-                        {left: '$', right: '$', display: false},
-                        {left: '\\(', right: '\\)', display: false},
-                        {left: '\\[', right: '\\]', display: true}
-                    ],
-                    throwOnError: false
-                });
-            }
-            
-            chatHistory.appendChild(div);
-            chatHistory.scrollTop = chatHistory.scrollHeight;
+function appendMessage(role, content) {
+    const div = document.createElement('div');
+    div.className = `message ${role === 'user' ? 'user-msg' : 'ai-msg'}`;
+    
+    if (role === 'user') {
+        div.innerText = content;
+    } else {
+        const cleanedContent = cleanMathText(content);
+        div.innerHTML = marked.parse(cleanedContent);
+        
+        renderMathInElement(div, {
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            throwOnError: false
+        });
+    }
+    
+    chatHistory.appendChild(div);
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+}
+
+async function sendMessage() {
+    const text = userInput.value.trim();
+    if (!text) return;
+    
+    appendMessage('user', text);
+    messages.push({"role": "user", "content": text});
+    userInput.value = '';
+    
+    const currentPassword = localStorage.getItem('site_pass');
+    
+    try {
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-site-password': currentPassword
+            },
+            body: JSON.stringify({ messages: messages })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error || "Server error");
         }
-
-        async function sendMessage() {
-            const text = userInput.value.trim();
-            if (!text) return;
-
-            appendMessage('user', text);
-            messages.push({"role": "user", "content": text});
-            userInput.value = '';
-
-            const currentPassword = localStorage.getItem('site_pass');
-
-            try {
-                const response = await fetch('/api/chat', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'x-site-password': currentPassword
-                    },
-                    body: JSON.stringify({ messages: messages })
-                });
-                
-                const data = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(data.error || "Server error");
-                }
-
-                const aiReply = data.choices[0].message.content;
-                appendMessage('assistant', aiReply);
-                messages.push({"role": "assistant", "content": aiReply});
-            } catch (error) {
-                appendMessage('assistant', `Error: ${error.message}`);
-                messages.pop();
-            }
-        }
-    </script>
+        
+        const aiReply = data.choices[0].message.content;
+        appendMessage('assistant', aiReply);
+        messages.push({"role": "assistant", "content": aiReply});
+        
+    } catch (error) {
+        appendMessage('assistant', `Error: ${error.message}`);
+        messages.pop();
+    }
+}
+</script>
 </body>
 </html>
